@@ -1,5 +1,6 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
+use chrono::{DateTime, Local, Timelike};
 use serde_json::Value;
 use thirtyfour::{
     action_chain::ActionChain, error::WebDriverResult, prelude::{ElementQueryable, ElementWaitable}, By, WebDriver
@@ -11,6 +12,7 @@ use crate::animalitos::Animalitos;
 pub struct Jugadas {
     animales: Animalitos,
     driver: WebDriver,
+    animalitosjugados:HashMap<u32,Vec<String>>
 }
 
 impl Jugadas {
@@ -20,6 +22,7 @@ impl Jugadas {
         Jugadas {
             animales: animalitos,
             driver,
+            animalitosjugados:HashMap::new()
         }
     }
     pub async fn click(&self, select: &str) {
@@ -88,6 +91,23 @@ impl Jugadas {
 
     
     pub async fn jugada(&mut self, numero: &str) {
+
+         let now=Local::now().hour();
+
+        if let Some(animalito)= self.animalitosjugados.get_mut(&now){
+
+
+             if animalito.contains(&numero.to_string()){
+
+                return;
+             }else {
+                 animalito.push(numero.to_string());
+             }
+        }else {
+            self.animalitosjugados.insert(now, vec![numero.to_string()]);
+        }
+
+
         if let Some(animalito) = self.animales.animalitos.get(numero) {
 
             let ani=match self.driver.find(By::Css(animalito.to_string())).await {
