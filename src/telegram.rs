@@ -37,35 +37,36 @@ impl Telegram {
 
         let pefiles = Driver.factory(perfiles).await;
 
-        let jugadas = jugadas::Jugadas::new().await;
-
         // let rx_clone=Arc::clone(&rx);
 
         for i in pefiles {
             let mut rx = rx.resubscribe();
-            let jugadas = jugadas.clone();
+            let mut jugadas = jugadas::Jugadas::new(i.driver.clone()).await;
 
             tokio::spawn(async move {
+                let keepalive_task = {
+                    let driver = i.driver;
+                    tokio::spawn(async move {
+                        let mut ticker = interval(Duration::from_secs(30));
+                        loop {
+                            ticker.tick().await;
 
-                 let keepalive_task = {
-            let driver = i.driver.clone();
-            tokio::spawn(async move {
-                let mut ticker = interval(Duration::from_secs(30));
-                loop {
-                    ticker.tick().await;
-                    println!("hola");
-                    // Comando liviano para mantener viva la sesión
-                    let _ = driver.current_url().await;
+                            // Comando liviano para mantener viva la sesión
+                            let _ = driver.current_url().await;
+                        }
+                    })
+                };
+
+                jugadas.desbloquear(i.usuario, i.contrasena).await.unwrap();
+
+                jugadas.ficha().await;
+
+                while let Ok(mensaje) = rx.recv().await {
+                    for i in mensaje {
+
+                          jugadas.jugada(i.as_str()).await
+                    }
                 }
-            })
-        };
-
-
-                jugadas
-                    .desbloquear(&i.driver, i.usuario, i.contrasena)
-                    .await
-                    .unwrap();
-                while let Ok(mensaje) = rx.recv().await {}
                 keepalive_task.abort();
             });
         }

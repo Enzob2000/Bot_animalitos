@@ -1,127 +1,135 @@
-use std::{clone, time::Duration};
+use std::time::Duration;
 
-use thirtyfour::{By, WebDriver, error::WebDriverResult};
+use serde_json::Value;
+use thirtyfour::{
+    action_chain::ActionChain, error::WebDriverResult, prelude::{ElementQueryable, ElementWaitable}, By, WebDriver
+};
 use tokio::time::sleep;
 
 use crate::animalitos::Animalitos;
 #[derive(Clone)]
 pub struct Jugadas {
     animales: Animalitos,
+    driver: WebDriver,
 }
 
 impl Jugadas {
-    pub async fn new() -> Jugadas {
+    pub async fn new(driver: WebDriver) -> Jugadas {
         let animalitos = Animalitos::new().await;
 
         Jugadas {
             animales: animalitos,
+            driver,
+        }
+    }
+    pub async fn click(&self, select: &str) {
+        let mut intentos = 0;
+
+        while intentos != 3 {
+            match self.driver.find(By::Css(select)).await {
+                Ok(e) => {
+                   
+
+
+
+
+                    match e.click().await {
+                        Ok(_) => {
+                            intentos = 3;
+                        }
+                        Err(r) => {
+                            println!("click error {}", select);
+                            println!(" error {}", r);
+
+                            sleep(Duration::from_secs(2)).await;
+
+                            intentos += 1
+                        }
+                    };
+                }
+                Err(_) => {
+                    println!("error {}", select);
+                    sleep(Duration::from_secs(2)).await;
+                    intentos += 1;
+                }
+            };
         }
     }
 
-    pub async fn desbloquear(
-        &self,
-        driver:& WebDriver,
-        nombre: String,
-        contra: String,
-    ) -> WebDriverResult<()> {
-        driver.goto("https://secure.loteriadehoy.com/").await?;
-
-        sleep(Duration::from_secs(10)).await;
+    pub async fn desbloquear(&mut self, nombre: String, contra: String) -> WebDriverResult<()> {
+        self.driver.goto("https://secure.loteriadehoy.com/").await?;
 
         // 3. Busca el elemento con tu selector CSS
-        let elem = driver
-        .find(By::Css("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-cancel.swal2-styled"))
-        .await?;
+
+        self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-cancel.swal2-styled").await;
 
         // 4. Interactúa: por ejemplo, haz clic
-        elem.click().await?;
 
-        let form = driver
+        let form = self
+            .driver
             .find(By::Css("#login_form > div:nth-child(1) > input"))
             .await?;
 
         form.send_keys(nombre).await?;
 
-        let form1 = driver
+        let form1 = self
+            .driver
             .find(By::Css("#login_form > div:nth-child(2) > input"))
             .await?;
 
         form1.send_keys(contra).await?;
 
-        driver
-            .find(By::Css("#kt_login_signin_submit"))
-            .await?
-            .click()
-            .await?;
+        self.click("#kt_login_signin_submit").await;
 
-        sleep(Duration::from_secs(5)).await;
-
-        driver.find(By::Css("#kt_content > div > div > section > div.container > div > div.col-lg-6.col-md-12 > div > div.contentCircle > div.CirItem.title-box.CirItem1.active > button")).await?.click().await?;
+        self.click("#kt_content > div > div > section > div.container > div > div.col-lg-6.col-md-12 > div > div.contentCircle > div.CirItem.title-box.CirItem1.active > button").await;
 
         Ok(())
     }
 
-    pub async fn jugada(&self, driver: &WebDriver, numero: String) {
-        if let Some(animalito) = self.animales.animalitos.get(numero.as_str()) {
-            driver
-                .find(By::Css(*animalito))
-                .await
-                .unwrap()
-                .click()
-                .await
-                .unwrap();
-            driver
-                .find(By::Css(*animalito))
-                .await
-                .unwrap()
-                .click()
-                .await
-                .unwrap();
-            driver
-                .find(By::Css(*animalito))
-                .await
-                .unwrap()
-                .click()
-                .await
-                .unwrap();
+    
+    pub async fn jugada(&mut self, numero: &str) {
+        if let Some(animalito) = self.animales.animalitos.get(numero) {
+
+            let ani=match self.driver.find(By::Css(animalito.to_string())).await {
+                Ok(ani) => ani,
+                Err(_) => return 
+            };
+
+            let mut intent=0;
+
+            while intent!=1 {
+                
+            match self.driver
+                    .execute(
+                        "arguments[0].click();",
+                        vec![ani.to_json().unwrap()],        // convertimos WebElement a JSON
+                    )
+                    .await {
+                Ok(_) => {
+                    intent+=1;
+                },
+                Err(_) => {
+                   return ;
+                },
+            }
+        
+        };
+
+
         }
     }
 
-    pub async fn ficha(&self, driver:&WebDriver) {
-        driver
-            .find(By::Css(
-                "#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22",
-            ))
-            .await
-            .unwrap()
-            .click()
-            .await
-            .unwrap();
-
-        driver
-            .find(By::Css(
-                r"#p_1_tab > div:nth-child(6) > div > div:nth-child(5)",
-            ))
-            .await
-            .unwrap()
-            .click()
-            .await
-            .unwrap();
+    pub async fn ficha(&self) {
+        self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22")
+            .await;
+        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(4)")
+            .await;
     }
 
-    pub async fn finalizar(&self, driver:&WebDriver) {
-        driver
-            .find(By::Css(
-                r"#p_1_tab > div.col-12.d-flex.jc-all.row > button.btn.btn-proccess.ml-5.mr-3.loto-play-single-bet2",
-            ))
-            .await
-            .unwrap()
-            .click()
-            .await
-            .unwrap();
-        driver.find(By::Css("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select")).await.unwrap().click().await.unwrap();
-        driver.find(By::Css("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select > option:nth-child(3)")).await.unwrap().click().await.unwrap();
-        driver.find(By::Css("#btn_loto_purchase")).await.unwrap().click().await.unwrap();
-
+    pub async fn finalizar(&self) {
+        self.click(r"#p_1_tab > div.col-12.d-flex.jc-all.row > button.btn.btn-proccess.ml-5.mr-3.loto-play-single-bet2").await;
+        self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select").await;
+        self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select > option:nth-child(3)").await;
+        self.click("#btn_loto_purchase").await;
     }
 }

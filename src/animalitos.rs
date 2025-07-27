@@ -12,17 +12,20 @@ impl  Animalitos {
 
         let mut animalitos=HashMap::new();
 
-        animalitos.insert("00","#animalito > div.row.line1 > div.num0.numerito.green" );
-        animalitos.insert("0","#animalito > div.row.line1 > div.num00.numerito.green" );
+        animalitos.insert("00","#animalito > div.row.line1 > div.num00.numerito.green" );
+        animalitos.insert("0","#animalito > div.row.line1 > div.num0.numerito.green" );
 
-        animalitos.insert("01",r"#animalito > div:nth-child(3) > div.num1.numerito.\31 -12.\31 -18.\31 -34.red.odd.flipped" );
-        animalitos.insert("1",r"#animalito > div:nth-child(3) > div.num1.numerito.\31 -12.\31 -18.\31 -34.red.odd.flipped" );
+        
 
+        animalitos.insert("01",r"#animalito > div:nth-child(3) > div.num1.numerito.\31 -12.\31 -18.\31 -34.red.odd" );
+        animalitos.insert("1",r"#animalito > div:nth-child(3) > div.num1.numerito.\31 -12.\31 -18.\31 -34.red.odd" );
+
+        
+        animalitos.insert("2",r"#animalito > div:nth-child(3) > div.num2.numerito.\31 -12.\31 -18.\32 -35.black.even" );
         animalitos.insert("02",r"#animalito > div:nth-child(3) > div.num2.numerito.\31 -12.\31 -18.\32 -35.black.even" );
-        animalitos.insert("02",r"#animalito > div:nth-child(3) > div.num2.numerito.\31 -12.\31 -18.\32 -35.black.even" );
 
-        animalitos.insert("03",r"#animalito > div:nth-child(3) > div.num3.numerito.\31 -12.\31 -18.\33 -36.red.odd.flipped" );
-        animalitos.insert("3",r"#animalito > div:nth-child(3) > div.num3.numerito.\31 -12.\31 -18.\33 -36.red.odd.flipped" );
+        animalitos.insert("03",r"#animalito > div:nth-child(3) > div.num3.numerito.\31 -12.\31 -18.\33 -36.red.odd" );
+        animalitos.insert("3",r"#animalito > div:nth-child(3) > div.num3.numerito.\31 -12.\31 -18.\33 -36.red.odd" );
         
         animalitos.insert("04",r"#animalito > div:nth-child(4) > div.num4.numerito.\31 -12.\31 -18.\31 -34.black.even" );
         animalitos.insert("4",r"#animalito > div:nth-child(4) > div.num4.numerito.\31 -12.\31 -18.\31 -34.black.even" );
