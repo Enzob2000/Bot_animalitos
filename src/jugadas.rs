@@ -140,8 +140,12 @@ impl Jugadas {
     }
 
     pub async fn ficha(&self) {
+
+        
         self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22")
             .await;
+  
+       
         self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(4)")
             .await;
     }

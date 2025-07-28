@@ -5,9 +5,10 @@ use crate::{
     perfil::{self, Perfil},
 };
 use std::{
-    clone, collections::HashMap, env, fs, hash::Hash, path::Path, sync::Arc, thread::sleep,
+    clone, collections::HashMap, env, fs, hash::Hash, path::Path, sync::Arc, 
     time::Duration, vec,
 };
+use chrono::{Local, Timelike};
 use teloxide::update_listeners::Polling;
 use teloxide::{
     dispatching::dialogue::GetChatId,
@@ -16,7 +17,7 @@ use teloxide::{
 };
 use thirtyfour::WebDriver;
 use tokio::sync::{Mutex, broadcast::Sender, mpsc::Receiver};
-use tokio::time::interval;
+use tokio::time::{interval, sleep};
 use tokio::{spawn, sync::broadcast};
 type HHandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 type Ar = Arc<Mutex<Sender<Vec<String>>>>;
@@ -37,7 +38,7 @@ impl Telegram {
 
         let pefiles = Driver.factory(perfiles).await;
 
-        // let rx_clone=Arc::clone(&rx);
+       
 
         for i in pefiles {
             let mut rx = rx.resubscribe();
@@ -46,9 +47,30 @@ impl Telegram {
             tokio::spawn(async move {
                 let keepalive_task = {
                     let driver = i.driver;
+                    let jugadasx=jugadas.clone();
                     tokio::spawn(async move {
                         let mut ticker = interval(Duration::from_secs(30));
                         loop {
+
+                            let now=Local::now().minute();
+
+                            println!(" minutos  {}",now);
+
+                            if now==9{
+                              
+                              match driver.refresh().await {
+                                  Ok(_) => {},
+                                  Err(_) => {
+                                    sleep(Duration::from_secs(5)).await;
+                                    driver.refresh().await.unwrap()
+                                  },
+                              };
+
+                              jugadasx.ficha().await;
+
+
+
+                            };
                             ticker.tick().await;
 
                             // Comando liviano para mantener viva la sesión
@@ -64,7 +86,8 @@ impl Telegram {
                 while let Ok(mensaje) = rx.recv().await {
                     for i in mensaje {
 
-                          jugadas.jugada(i.as_str()).await
+                          jugadas.jugada(i.as_str()).await;
+                          
                     }
                 }
                 keepalive_task.abort();
