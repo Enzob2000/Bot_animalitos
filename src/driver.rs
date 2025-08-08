@@ -46,26 +46,27 @@ pub async  fn new(&self)->WebDriver{
 #[cfg(target_os = "linux")]
  pub async  fn new(&self)->WebDriver{
 
-  
- let mut caps = DesiredCapabilities::firefox();
+  let mut caps = DesiredCapabilities::firefox();
 
-    // ⚙️ Configura opciones de Firefox
-    let firefox_opts = json!({
+   let firefox_opts = json!({
         "args": [
             "--start-maximized"
         ],
         "prefs": {
-            // Evita el banner de automatización
+            // Desactiva el flag de WebDriver
             "dom.webdriver.enabled": false,
-            "useAutomationExtension": false,
+            // Evita que se exponga el objeto `navigator.webdriver`
+            "webdriver_accept_untrusted_certs": true,
             "media.navigator.enabled": false,
             "media.peerconnection.enabled": false,
-            "privacy.trackingprotection.enabled": true
+            "privacy.trackingprotection.enabled": true,
+            "security.cert_pinning.enforcement_level": 0
         }
     });
 
-    caps.insert_browser_option("moz:firefoxOptions", firefox_opts)
-    .unwrap();
+    // ✅ Inserta las opciones
+    caps.insert_browser_option("moz:firefoxOptions", firefox_opts).unwrap();
+
 
  
 
