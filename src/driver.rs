@@ -1,5 +1,5 @@
 use serde_json::json;
-use thirtyfour::{ChromiumLikeCapabilities, DesiredCapabilities, WebDriver};
+use thirtyfour::{BrowserCapabilitiesHelper, CapabilitiesHelper, ChromiumLikeCapabilities, DesiredCapabilities, WebDriver};
 use tokio::fs::read_to_string;
 
 use crate::perfil::{self, Perfil};
@@ -49,14 +49,23 @@ pub async  fn new(&self)->WebDriver{
   
  let mut caps = DesiredCapabilities::firefox();
 
-    // 2. Agrega los flags
-    caps.add_arg("--disable-blink-features=AutomationControlled").unwrap();
-    caps.add_arg("--disable-infobars").unwrap();
-    caps.add_arg("--start-maximized").unwrap();
+    // ⚙️ Configura opciones de Firefox
+    let firefox_opts = json!({
+        "args": [
+            "--start-maximized"
+        ],
+        "prefs": {
+            // Evita el banner de automatización
+            "dom.webdriver.enabled": false,
+            "useAutomationExtension": false,
+            "media.navigator.enabled": false,
+            "media.peerconnection.enabled": false,
+            "privacy.trackingprotection.enabled": true
+        }
+    });
 
-    // 3. Excluye el switch que inyecta el banner "Chrome is being controlled by automated test software"
-    caps.add_experimental_option("excludeSwitches", json!(["enable-automation"])).unwrap();
-    caps.add_experimental_option("useAutomationExtension", json!(false)).unwrap();
+    caps.insert_browser_option("moz:firefoxOptions", firefox_opts);
+
  
 
     // 4. Inicializa el driver
