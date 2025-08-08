@@ -20,10 +20,10 @@ pub struct Driver;
 
 impl  Driver {
 
-
+#[cfg(target_os = "windows")]
 pub async  fn new(&self)->WebDriver{
 
-
+  
  let mut caps = DesiredCapabilities::chrome();
 
     // 2. Agrega los flags
@@ -40,7 +40,30 @@ pub async  fn new(&self)->WebDriver{
     let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
 
     driver
-}
+
+   }
+
+#[cfg(target_os = "linux")]
+ pub async  fn new(&self)->WebDriver{
+
+  
+ let mut caps = DesiredCapabilities::firefox();
+
+    // 2. Agrega los flags
+    caps.add_arg("--disable-blink-features=AutomationControlled").unwrap();
+    caps.add_arg("--disable-infobars").unwrap();
+    caps.add_arg("--start-maximized").unwrap();
+
+    // 3. Excluye el switch que inyecta el banner "Chrome is being controlled by automated test software"
+    caps.add_experimental_option("excludeSwitches", json!(["enable-automation"])).unwrap();
+    caps.add_experimental_option("useAutomationExtension", json!(false)).unwrap();
+ 
+
+    // 4. Inicializa el driver
+    let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
+
+    driver
+}  
 
 pub async fn factory(&self,perfiles:Vec<Perfil>)->Vec<PerfilJugadas>{
 

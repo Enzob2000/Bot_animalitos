@@ -1,5 +1,6 @@
 use std::fs::read_to_string;
 
+
 use serde::Deserialize;
 use thirtyfour::WebDriver;
 
@@ -17,6 +18,8 @@ pub contrasena:String,
 impl  Perfil{
 
 pub async fn new()->Vec<Perfil>{
+
+
 
 let perfiles=match read_to_string("perfiles.json") {
     Ok(e) => e,

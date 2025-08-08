@@ -54,9 +54,9 @@ impl Telegram {
 
                             let now=Local::now().minute();
 
-                            println!(" minutos  {}",now);
+                            
 
-                            if now==9{
+                            if now==55{
                               
                               match driver.refresh().await {
                                   Ok(_) => {},
@@ -85,10 +85,13 @@ impl Telegram {
 
                 while let Ok(mensaje) = rx.recv().await {
                     for i in mensaje {
+                        
 
                           jugadas.jugada(i.as_str()).await;
                           
+                          
                     }
+                    jugadas.finalizar().await;
                 }
                 keepalive_task.abort();
             });

@@ -92,32 +92,35 @@ impl Jugadas {
     
     pub async fn jugada(&mut self, numero: &str) {
 
-         let now=Local::now().hour();
+        //  let now=Local::now().hour();
 
-        if let Some(animalito)= self.animalitosjugados.get_mut(&now){
-
-
-             if animalito.contains(&numero.to_string()){
-
-                return;
-             }else {
-                 animalito.push(numero.to_string());
-             }
-        }else {
-            self.animalitosjugados.insert(now, vec![numero.to_string()]);
-        }
+        // if let Some(animalito)= self.animalitosjugados.get_mut(&now){
 
 
+        //      if animalito.contains(&numero.to_string()){
+
+        //         return;
+        //      }else {
+        //          animalito.push(numero.to_string());
+        //      }
+        // }else {
+        //     self.animalitosjugados.insert(now, vec![numero.to_string()]);
+        // }
+      
         if let Some(animalito) = self.animales.animalitos.get(numero) {
 
-            let ani=match self.driver.find(By::Css(animalito.to_string())).await {
+            let ani=match self.driver.find(By::XPath(animalito.to_string())).await {
                 Ok(ani) => ani,
-                Err(_) => return 
+                Err(_) => {
+
+                    println!("no funciona el animalito");
+                    return ;
+                } 
             };
 
             let mut intent=0;
 
-            while intent!=1 {
+            while intent!=2 {
                 
             match self.driver
                     .execute(
@@ -126,9 +129,12 @@ impl Jugadas {
                     )
                     .await {
                 Ok(_) => {
+                    println!("funciona el animalito");
                     intent+=1;
                 },
                 Err(_) => {
+
+                    println!("no funciona el animalito");
                    return ;
                 },
             }
@@ -144,16 +150,24 @@ impl Jugadas {
         
         self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22")
             .await;
-  
+      
        
-        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(4)")
+        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(1)")
             .await;
+
+       self.click("#p_22_tab > div:nth-child(3) > div > div.col-12.row.kt-checkbox-inline.jc-all.mb-5 > div:nth-child(1) > label")
+       .await;
     }
+    
+   
 
     pub async fn finalizar(&self) {
-        self.click(r"#p_1_tab > div.col-12.d-flex.jc-all.row > button.btn.btn-proccess.ml-5.mr-3.loto-play-single-bet2").await;
+        
+        self.click(r"#p_22_tab > div.col-12.d-flex.jc-all.row > button.btn.btn-proccess.ml-5.mr-3.loto-play-single-bet2").await;
         self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select").await;
-        self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select > option:nth-child(3)").await;
+        self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select > option:nth-child(3)").await; 
         self.click("#btn_loto_purchase").await;
+        self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-confirm.swal2-styled").await;
+        
     }
 }
