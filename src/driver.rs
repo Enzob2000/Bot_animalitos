@@ -43,7 +43,7 @@ pub async  fn new(&self)->WebDriver{
 
    }
 
-//#[cfg(target_os = "linux")]
+#[cfg(target_os = "linux")]
  pub async  fn new(&self)->WebDriver{
 
   
@@ -64,7 +64,8 @@ pub async  fn new(&self)->WebDriver{
         }
     });
 
-    caps.insert_browser_option("moz:firefoxOptions", firefox_opts).unwrap();
+    caps.insert_browser_option("moz:firefoxOptions", firefox_opts)
+    .unwrap();
 
  
 
