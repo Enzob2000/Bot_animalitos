@@ -64,6 +64,7 @@ pub async fn factory(&self,perfiles:Vec<Perfil>)->Vec<PerfilJugadas>{
 
 let mut perfilesju=Vec::new();
 
+
 for perfil in perfiles{
 
  let driver=self.new().await;

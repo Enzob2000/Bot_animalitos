@@ -37,6 +37,7 @@ sudo apt install -y firefox firefox-geckodriver",
         Command::new("geckodriver")
             .arg("--port")
             .arg("9515")
+            .arg("&")
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
