@@ -48,24 +48,7 @@ pub async  fn new(&self)->WebDriver{
 
   let mut caps = DesiredCapabilities::firefox();
 
-   let firefox_opts = json!({
-        "args": [
-            "--start-maximized"
-        ],
-        "prefs": {
-            // Desactiva el flag de WebDriver
-            "dom.webdriver.enabled": false,
-            // Evita que se exponga el objeto `navigator.webdriver`
-            "webdriver_accept_untrusted_certs": true,
-            "media.navigator.enabled": false,
-            "media.peerconnection.enabled": false,
-            "privacy.trackingprotection.enabled": true,
-            "security.cert_pinning.enforcement_level": 0
-        }
-    });
-
-    // ✅ Inserta las opciones
-    caps.insert_browser_option("moz:firefoxOptions", firefox_opts).unwrap();
+   
 
 
  
