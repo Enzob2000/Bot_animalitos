@@ -20,7 +20,7 @@ pub struct Driver;
 
 impl  Driver {
 
-#[cfg(target_os = "windows")]
+
 pub async  fn new(&self)->WebDriver{
 
   
