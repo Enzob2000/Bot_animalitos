@@ -50,7 +50,7 @@ pub async  fn new(&self)->WebDriver{
 
    
 
-
+    println!("se inicion un session");
  
 
     // 4. Inicializa el driver
