@@ -14,30 +14,12 @@ impl Webdriver {
     #[cfg(target_os = "linux")]
     pub async fn carga(&self) {
         // 1) Actualizar repos y instalar geckodriver (requiere permisos sudo)
-        let status = Command::new("sh")
-            .arg("-c")
-            .arg(
-                "sudo apt update &&
-sudo apt install -y firefox firefox-geckodriver",
-            )
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()
-            .unwrap();
-
-        if !status.success() {
-            eprintln!(
-                "Error al instalar geckodriver: código {}",
-                status.code().unwrap_or(-1)
-            );
-            // Decide si quieres hacer return Err aquí
-        }
+        
 
         // 2) Arrancar geckodriver en background escuchando en el puerto 9515
         Command::new("geckodriver")
             .arg("--port")
             .arg("9515")
-            .arg("&")
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
