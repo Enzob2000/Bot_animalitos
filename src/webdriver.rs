@@ -18,7 +18,7 @@ impl Webdriver {
 
         if !ruta.exists() {
             let mut file = File::create("chromedriver").await.unwrap();
-            file.write_all(exe).await.unwrap();
+            file.write_all(exe_linux).await.unwrap();
             file.flush().await.unwrap(); // Asegura que todo está en disco
         }
 
