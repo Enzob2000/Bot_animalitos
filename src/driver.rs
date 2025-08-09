@@ -43,21 +43,7 @@ pub async  fn new(&self)->WebDriver{
 
    }
 
-#[cfg(target_os = "linux")]
- pub async  fn new(&self)->WebDriver{
-
-  let mut caps = DesiredCapabilities::firefox();
-
-   
-
-    println!("se inicion un session");
  
-
-    // 4. Inicializa el driver
-    let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
-
-    driver
-}  
 
 pub async fn factory(&self,perfiles:Vec<Perfil>)->Vec<PerfilJugadas>{
 

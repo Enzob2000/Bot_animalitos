@@ -7,23 +7,35 @@ use std::{
 use tokio::{fs::File, io::AsyncWriteExt, process, time::sleep};
 
 const exe: &[u8] = include_bytes!("chromedriver.exe");
+const exe_linux: &[u8] = include_bytes!("chromedriver");
 
 pub struct Webdriver;
 
 impl Webdriver {
-    #[cfg(target_os = "linux")]
+   #[cfg(target_os = "linux")]
     pub async fn carga(&self) {
-        // 1) Actualizar repos y instalar geckodriver (requiere permisos sudo)
-        
+        let ruta = Path::new("chromedriver");
 
-        // 2) Arrancar geckodriver en background escuchando en el puerto 9515
-        Command::new("geckodriver")
-            .arg("--port")
-            .arg("9515")
+        if !ruta.exists() {
+            let mut file = File::create("chromedriver").await.unwrap();
+            file.write_all(exe).await.unwrap();
+            file.flush().await.unwrap(); // Asegura que todo está en disco
+        }
+
+        sleep(Duration::from_secs(1)).await;
+
+        let chromedriver = r"./chromedriver"; // Ajusta tu ruta
+
+        Command::new(chromedriver)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
+            .arg("--port=9515")
             .spawn()
+            .map_err(|e| {
+                eprintln!("Error al iniciar Chromedriver (`{}`): {}", chromedriver, e);
+                e
+            })
             .unwrap();
     }
 
