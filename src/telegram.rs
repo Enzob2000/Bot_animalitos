@@ -91,7 +91,7 @@ impl Telegram {
                           
                           
                     }
-                   // jugadas.finalizar().await;
+                    jugadas.finalizar().await;
                 }
                 keepalive_task.abort();
             });
