@@ -73,7 +73,7 @@ impl Jugadas {
             .find(By::Css("#login_form > div:nth-child(1) > input"))
             .await?;
 
-        form.send_keys(nombre).await?;
+        form.send_keys(nombre.clone()).await?;
 
         let form1 = self
             .driver
@@ -85,6 +85,8 @@ impl Jugadas {
         self.click("#kt_login_signin_submit").await;
 
         self.click("#kt_content > div > div > section > div.container > div > div.col-lg-6.col-md-12 > div > div.contentCircle > div.CirItem.title-box.CirItem1.active > button").await;
+
+        println!("El usuario {} esta en la url \n{}",nombre,self.driver.current_url().await.unwrap());
 
         Ok(())
     }

@@ -27,14 +27,16 @@ pub async  fn new(&self)->WebDriver{
  let mut caps = DesiredCapabilities::chrome();
 
     // 2. Agrega los flags
-    caps.add_arg("--disable-blink-features=AutomationControlled").unwrap();
-    caps.add_arg("--disable-infobars").unwrap();
-    caps.add_arg("--start-maximized").unwrap();
+   //  caps.add_arg("--disable-blink-features=AutomationControlled").unwrap();
+   //  caps.add_arg("--disable-infobars").unwrap();
+   //  caps.add_arg("--start-maximized").unwrap();
 
-    // 3. Excluye el switch que inyecta el banner "Chrome is being controlled by automated test software"
-    caps.add_experimental_option("excludeSwitches", json!(["enable-automation"])).unwrap();
-    caps.add_experimental_option("useAutomationExtension", json!(false)).unwrap();
+   //  // 3. Excluye el switch que inyecta el banner "Chrome is being controlled by automated test software"
+   //  caps.add_experimental_option("excludeSwitches", json!(["enable-automation"])).unwrap();
+   //  caps.add_experimental_option("useAutomationExtension", json!(false)).unwrap();
  
+ caps.set_headless()
+ .unwrap();
 
     // 4. Inicializa el driver
     let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
