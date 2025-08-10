@@ -92,20 +92,20 @@ impl Jugadas {
     
     pub async fn jugada(&mut self, numero: &str) {
 
-        //  let now=Local::now().hour();
+         let now=Local::now().hour();
 
-        // if let Some(animalito)= self.animalitosjugados.get_mut(&now){
+        if let Some(animalito)= self.animalitosjugados.get_mut(&now){
 
 
-        //      if animalito.contains(&numero.to_string()){
+             if animalito.contains(&numero.to_string()){
 
-        //         return;
-        //      }else {
-        //          animalito.push(numero.to_string());
-        //      }
-        // }else {
-        //     self.animalitosjugados.insert(now, vec![numero.to_string()]);
-        // }
+                return;
+             }else {
+                 animalito.push(numero.to_string());
+             }
+        }else {
+            self.animalitosjugados.insert(now, vec![numero.to_string()]);
+        }
       
         if let Some(animalito) = self.animales.animalitos.get(numero) {
 
@@ -120,7 +120,7 @@ impl Jugadas {
 
             let mut intent=0;
 
-            while intent!=2 {
+            while intent!=3 {
                 
             match self.driver
                     .execute(
@@ -152,7 +152,7 @@ impl Jugadas {
             .await;
       
        
-        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(1)")
+        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(4)")
             .await;
 
        self.click("#p_22_tab > div:nth-child(3) > div > div.col-12.row.kt-checkbox-inline.jc-all.mb-5 > div:nth-child(1) > label")
