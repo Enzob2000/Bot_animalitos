@@ -40,6 +40,7 @@ impl Webdriver {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .arg("--port=9515")
+            .arg("--whitelisted-ips=") 
             .spawn()
             .map_err(|e| {
                 eprintln!("Error al iniciar Chromedriver (`{}`): {}", chromedriver, e);
@@ -69,6 +70,7 @@ impl Webdriver {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .arg("--port=9515")
+            .arg("--whitelisted-ips=") 
             .spawn()
             .map_err(|e| {
                 eprintln!("Error al iniciar Chromedriver (`{}`): {}", chromedriver, e);
