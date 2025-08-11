@@ -4,6 +4,7 @@ use std::{
     time::Duration,
 };
 
+
 use tokio::{fs::File, io::AsyncWriteExt, process, time::sleep};
 
 const exe: &[u8] = include_bytes!("chromedriver.exe");
@@ -25,6 +26,14 @@ impl Webdriver {
         sleep(Duration::from_secs(1)).await;
 
         let chromedriver = r"./chromedriver"; // Ajusta tu ruta
+
+        let status = Command::new("chmod")
+        .arg("+x")
+        .arg("chromedriver")
+        .status()
+        .expect("Error al ejecutar chmod");
+
+
 
         Command::new(chromedriver)
             .stdin(Stdio::null())
@@ -52,6 +61,8 @@ impl Webdriver {
         sleep(Duration::from_secs(1)).await;
 
         let chromedriver = r".\chromedriver.exe"; // Ajusta tu ruta
+
+      
 
         Command::new(chromedriver)
             .stdin(Stdio::null())
