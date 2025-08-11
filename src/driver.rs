@@ -39,7 +39,16 @@ pub async  fn new(&self)->WebDriver{
  .unwrap();
 
     // 4. Inicializa el driver
-    let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
+    let driver = match WebDriver::new("http://localhost:9515", caps.clone()).await {
+        Ok(driver) => driver,
+        Err(e) => {
+         println!("Error al iniciar el WebDriver: {}", e);
+
+         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+          WebDriver::new("http://localhost:9515", caps).await.unwrap()
+        },
+    };
 
     driver
 
