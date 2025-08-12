@@ -30,17 +30,23 @@ impl Telegram {
         let tx: Ar = Arc::new(Mutex::new(tx));
 
         // let rx = Arc::new(Mutex::new(rx));
+        let grupo = "-4940706854".to_string();
 
         let bot = Bot::new("8369993762:AAEFLWZ2fMiZuMIGVJhyDNso3gG4mDYuE9I");
 
         let perfiles = perfil::Perfil::new().await;
 
+        
+
         let pefiles = Driver.factory(perfiles).await;
+        
+        bot.send_message(grupo.clone(), "Cargando Bot...").await.unwrap();
 
         for i in pefiles {
             let mut rx = rx.resubscribe();
             let mut jugadas = jugadas::Jugadas::new(i.driver.clone()).await;
             let botaux = bot.clone();
+            let grupo = grupo.clone();
 
             tokio::spawn(async move {
                 let keepalive_task = {
@@ -70,7 +76,6 @@ impl Telegram {
                     })
                 };
 
-                let grupo = "-4940706854".to_string();
                 jugadas
                     .desbloquear(i.usuario.clone(), i.contrasena)
                     .await
@@ -84,10 +89,7 @@ impl Telegram {
                         format!("{}\n\u{1F534} No Disponible para jugar", i.usuario)
                     }
                 };
-                botaux
-                    .send_message(grupo.clone(), mensaje)
-                    .await
-                    .unwrap();
+                botaux.send_message(grupo.clone(), mensaje).await.unwrap();
 
                 while let Ok(mensaje) = rx.recv().await {
                     for j in mensaje {
@@ -102,10 +104,7 @@ impl Telegram {
                             }
                         };
 
-                        botaux
-                            .send_message(grupo.clone(), mensaje)
-                            .await
-                            .unwrap();
+                        botaux.send_message(grupo.clone(), mensaje).await.unwrap();
                     }
                 }
                 keepalive_task.abort();
