@@ -84,7 +84,6 @@ impl Jugadas {
 
         self.click("#kt_content > div > div > section > div.container > div > div.col-lg-6.col-md-12 > div > div.contentCircle > div.CirItem.title-box.CirItem1.active > button").await;
 
-
         Ok(())
     }
 
@@ -134,7 +133,7 @@ impl Jugadas {
         }
     }
 
-    pub async fn ficha(&self)->Result<(), ()> {
+    pub async fn ficha(&self) -> Result<(), ()> {
         self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22")
             .await;
 
@@ -150,7 +149,6 @@ impl Jugadas {
         } else {
             Err(())
         }
-       
     }
 
     pub async fn finalizar(&self) -> Result<(), ()> {
