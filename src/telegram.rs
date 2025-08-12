@@ -36,11 +36,11 @@ impl Telegram {
 
         let perfiles = perfil::Perfil::new().await;
 
-        
-
         let pefiles = Driver.factory(perfiles).await;
-        
-        bot.send_message(grupo.clone(), "Cargando Bot...").await.unwrap();
+
+        bot.send_message(grupo.clone(), "Cargando Bot...")
+            .await
+            .unwrap();
 
         for i in pefiles {
             let mut rx = rx.resubscribe();
@@ -52,21 +52,32 @@ impl Telegram {
                 let keepalive_task = {
                     let driver = i.driver;
                     let jugadasx = jugadas.clone();
+                    let usuario = i.usuario.clone();
+                    let botaux2=botaux.clone();
+                    let grupo2=grupo.clone();
                     tokio::spawn(async move {
                         let mut ticker = interval(Duration::from_secs(30));
+                        let mut hora=true;
                         loop {
                             let now = Local::now().minute();
+                            
+                            
 
-                            if now == 55 {
-                                match driver.refresh().await {
-                                    Ok(_) => {}
+                            if now == 14 && hora{
+                                driver.refresh().await.unwrap();
+
+                                let mensaje = match jugadasx.ficha().await {
+                                    Ok(_) => {
+                                        format!("{}\n\u{1F7E2} Disponible para jugar", usuario.clone())
+                                    }
                                     Err(_) => {
-                                        sleep(Duration::from_secs(5)).await;
-                                        driver.refresh().await.unwrap()
+                                        format!("{}\n\u{1F534} No Disponible para jugar", usuario.clone())
                                     }
                                 };
-
-                                jugadasx.ficha().await.unwrap();
+                                botaux2.send_message(grupo2.clone(), mensaje).await.unwrap();
+                                hora=false;
+                            }else {
+                                hora=true
                             };
                             ticker.tick().await;
 
