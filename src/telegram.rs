@@ -63,7 +63,7 @@ impl Telegram {
                             
                             
 
-                            if now == 14 && hora{
+                            if now == 57 && hora{
                                 driver.refresh().await.unwrap();
 
                                 let mensaje = match jugadasx.ficha().await {
