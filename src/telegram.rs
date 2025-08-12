@@ -4,11 +4,10 @@ use crate::{
     driver, expresion,
     perfil::{self, Perfil},
 };
-use std::{
-    clone, collections::HashMap, env, fs, hash::Hash, path::Path, sync::Arc, 
-    time::Duration, vec,
-};
 use chrono::{Local, Timelike};
+use std::{
+    clone, collections::HashMap, env, fs, hash::Hash, path::Path, sync::Arc, time::Duration, vec,
+};
 use teloxide::update_listeners::Polling;
 use teloxide::{
     dispatching::dialogue::GetChatId,
@@ -38,38 +37,30 @@ impl Telegram {
 
         let pefiles = Driver.factory(perfiles).await;
 
-       
-
         for i in pefiles {
             let mut rx = rx.resubscribe();
             let mut jugadas = jugadas::Jugadas::new(i.driver.clone()).await;
+            let botaux = bot.clone();
 
             tokio::spawn(async move {
                 let keepalive_task = {
                     let driver = i.driver;
-                    let jugadasx=jugadas.clone();
+                    let jugadasx = jugadas.clone();
                     tokio::spawn(async move {
                         let mut ticker = interval(Duration::from_secs(30));
                         loop {
+                            let now = Local::now().minute();
 
-                            let now=Local::now().minute();
+                            if now == 55 {
+                                match driver.refresh().await {
+                                    Ok(_) => {}
+                                    Err(_) => {
+                                        sleep(Duration::from_secs(5)).await;
+                                        driver.refresh().await.unwrap()
+                                    }
+                                };
 
-                            
-
-                            if now==55{
-                              
-                              match driver.refresh().await {
-                                  Ok(_) => {},
-                                  Err(_) => {
-                                    sleep(Duration::from_secs(5)).await;
-                                    driver.refresh().await.unwrap()
-                                  },
-                              };
-
-                              jugadasx.ficha().await;
-
-
-
+                                jugadasx.ficha().await.unwrap();
                             };
                             ticker.tick().await;
 
@@ -79,19 +70,43 @@ impl Telegram {
                     })
                 };
 
-                jugadas.desbloquear(i.usuario, i.contrasena).await.unwrap();
+                let grupo = "-4940706854".to_string();
+                jugadas
+                    .desbloquear(i.usuario.clone(), i.contrasena)
+                    .await
+                    .unwrap();
 
-                jugadas.ficha().await;
+                let mensaje = match jugadas.ficha().await {
+                    Ok(_) => {
+                        format!("{}\n\u{1F7E2} Disponible para jugar", i.usuario)
+                    }
+                    Err(_) => {
+                        format!("{}\n\u{1F534} No Disponible para jugar", i.usuario)
+                    }
+                };
+                botaux
+                    .send_message(grupo.clone(), mensaje)
+                    .await
+                    .unwrap();
 
                 while let Ok(mensaje) = rx.recv().await {
-                    for i in mensaje {
-                        
+                    for j in mensaje {
+                        jugadas.jugada(j.as_str()).await;
 
-                          jugadas.jugada(i.as_str()).await;
-                          
-                          
+                        let mensaje = match jugadas.finalizar().await {
+                            Ok(_) => {
+                                format!("{}\n\u{1F7E2} numero {} jugado con exito", i.usuario, j)
+                            }
+                            Err(_) => {
+                                format!("{}\n\u{1F534} numero {} agotado", i.usuario, j)
+                            }
+                        };
+
+                        botaux
+                            .send_message(grupo.clone(), mensaje)
+                            .await
+                            .unwrap();
                     }
-                    jugadas.finalizar().await;
                 }
                 keepalive_task.abort();
             });
@@ -112,13 +127,9 @@ struct Handler;
 
 impl Handler {
     async fn recep(bot: Bot, msg: Message, tx: Ar) -> HHandlerResult {
-        let start = format!(r"numeros a juagar separados por ','");
-
         if let Some(mensage) = msg.text() {
             match mensage {
-                "/start" => {
-                    bot.send_message(msg.chat.id, start.clone()).await?;
-                }
+                "/start" => {}
                 _ => match expresion::Expresion::evaluar(mensage) {
                     Ok(numeros) => {
                         {
