@@ -21,6 +21,8 @@ use tokio::{spawn, sync::broadcast};
 type HHandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 type Ar = Arc<Mutex<Sender<Vec<String>>>>;
 
+
+const GRUPO: &str = "-4940706854";
 pub struct Telegram;
 
 impl Telegram {
@@ -30,7 +32,7 @@ impl Telegram {
         let tx: Ar = Arc::new(Mutex::new(tx));
 
         // let rx = Arc::new(Mutex::new(rx));
-        let grupo = "-4940706854".to_string();
+        let grupo = GRUPO.to_string();
 
         let bot = Bot::new("8369993762:AAEFLWZ2fMiZuMIGVJhyDNso3gG4mDYuE9I");
 
@@ -53,31 +55,35 @@ impl Telegram {
                     let driver = i.driver;
                     let jugadasx = jugadas.clone();
                     let usuario = i.usuario.clone();
-                    let botaux2=botaux.clone();
-                    let grupo2=grupo.clone();
+                    let botaux2 = botaux.clone();
+                    let grupo2 = grupo.clone();
                     tokio::spawn(async move {
                         let mut ticker = interval(Duration::from_secs(30));
-                        let mut hora=true;
+                        let mut hora = true;
                         loop {
                             let now = Local::now().minute();
-                            
-                            
 
-                            if now == 57 && hora{
+                            if now == 57 && hora {
                                 driver.refresh().await.unwrap();
 
                                 let mensaje = match jugadasx.ficha().await {
                                     Ok(_) => {
-                                        format!("{}\n\u{1F7E2} Disponible para jugar", usuario.clone())
+                                        format!(
+                                            "{}\n\u{1F7E2} Disponible para jugar",
+                                            usuario.clone()
+                                        )
                                     }
                                     Err(_) => {
-                                        format!("{}\n\u{1F534} No Disponible para jugar", usuario.clone())
+                                        format!(
+                                            "{}\n\u{1F534} No Disponible para jugar",
+                                            usuario.clone()
+                                        )
                                     }
                                 };
                                 botaux2.send_message(grupo2.clone(), mensaje).await.unwrap();
-                                hora=false;
-                            }else {
-                                hora=true
+                                hora = false;
+                            } else {
+                                hora = true
                             };
                             ticker.tick().await;
 
@@ -103,6 +109,8 @@ impl Telegram {
                 botaux.send_message(grupo.clone(), mensaje).await.unwrap();
 
                 while let Ok(mensaje) = rx.recv().await {
+                    
+
                     for j in mensaje {
                         jugadas.jugada(j.as_str()).await;
 
@@ -143,6 +151,22 @@ impl Handler {
                 _ => match expresion::Expresion::evaluar(mensage) {
                     Ok(numeros) => {
                         {
+
+                    let now = Local::now();
+
+                    if now.minute() >= 1 {
+                        let error = format!(
+                            "Hora no disponible para hacer jugadas,espere a las {}",
+                            now.hour12().1 + 1
+                        );
+
+                        bot.send_message(GRUPO.to_string(), error).await.unwrap();
+
+                        return Ok(());
+                    };
+
+
+
                             let cola = Arc::clone(&tx);
                             let tx = cola.lock().await;
                             tx.send(

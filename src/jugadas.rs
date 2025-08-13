@@ -137,7 +137,7 @@ impl Jugadas {
         self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_22")
             .await;
 
-        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(4)")
+        self.click(r"#p_22_tab > div:nth-child(6) > div > div:nth-child(1)")
             .await;
 
         self.click("#p_22_tab > div:nth-child(3) > div > div.col-12.row.kt-checkbox-inline.jc-all.mb-5 > div:nth-child(1) > label")
