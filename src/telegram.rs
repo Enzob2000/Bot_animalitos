@@ -154,7 +154,7 @@ impl Handler {
 
                     let now = Local::now();
 
-                    if now.minute() >= 1 {
+                    if now.minute() >= 50 {
                         let error = format!(
                             "Hora no disponible para hacer jugadas,espere a las {}",
                             now.hour12().1 + 1
