@@ -1,5 +1,6 @@
 use crate::driver::Driver;
 use crate::jugadas;
+use crate::perfil::Cantidad;
 use crate::{
     driver, expresion,
     perfil::{self, Perfil},
@@ -93,10 +94,14 @@ impl Telegram {
                     })
                 };
 
-                jugadas
-                    .desbloquear(i.usuario.clone(), i.contrasena)
-                    .await
-                    .unwrap();
+                match jugadas
+                                    .desbloquear(i.usuario.clone(), i.contrasena)
+                                    .await {
+                    Ok(_) => {},
+                    Err(e) => {
+                        println!("Error al desbloquear cuenta {}: {}", i.usuario, e);
+                    },
+                };
 
                 let mensaje = match jugadas.ficha().await {
                     Ok(_) => {
@@ -178,6 +183,57 @@ impl Handler {
                         };
                     }
                     Err(e) => {
+
+                        if e.to_lowercase().contains("info"){
+                         
+                         let cantidad= match fs::read_to_string("cantidad.json") {
+                            Ok(c) => {
+                                let cantidad: Cantidad = serde_json::from_str(&c).unwrap();
+                                cantidad.monto
+                            }
+                            Err(_) => "0".to_string(),};
+
+                            let loteria= match fs::read_to_string("loteria.json") {
+                                Ok(c) => {
+                                    let loteria: perfil::Loteri = serde_json::from_str(&c).unwrap();
+                                    loteria.loto
+                                }
+                                Err(_) => "No establecida".to_string(),
+                            };
+
+                            let info = format!("Cantidad actual: {}\nLoteria actual: {}", cantidad, loteria);
+                            bot.send_message(msg.chat.id, info).await?;
+
+                        };
+
+                        if e.to_lowercase().contains("set"){
+                         
+                         let cantidad=e.split(" ").collect::<Vec<&str>>()[1].to_string();
+
+                         let cantidad=Cantidad{
+                            monto:cantidad.to_string().trim().to_string()
+                         };
+                            fs::write("cantidad.json", serde_json::to_string(&cantidad).unwrap()).unwrap();
+                            bot.send_message(msg.chat.id, format!("Cantidad establecida a {}", cantidad.monto)).await?;
+
+                            return Ok(());
+                        }
+
+
+                        if e.to_lowercase().contains("loteria"){
+                         
+                         let loteria=e.split(" ").collect::<Vec<&str>>()[1].to_string();
+
+                         let loteria=perfil::Loteri{
+                            loto:loteria.to_string().trim().to_string()
+                         };
+                            fs::write("loteria.json", serde_json::to_string(&loteria).unwrap()).unwrap();
+
+                            bot.send_message(msg.chat.id, format!("Loteria establecida a {}", loteria.loto)).await?;
+
+                            return Ok(());
+                        }
+
                         bot.send_message(msg.chat.id, e).await?;
                     }
                 },

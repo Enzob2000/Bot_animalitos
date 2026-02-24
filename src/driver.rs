@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use serde_json::json;
 use thirtyfour::{BrowserCapabilitiesHelper, CapabilitiesHelper, ChromiumLikeCapabilities, DesiredCapabilities, WebDriver};
 use tokio::fs::read_to_string;
@@ -21,10 +23,27 @@ pub struct Driver;
 impl  Driver {
 
 
-pub async  fn new(&self)->WebDriver{
+pub async  fn new(&self,puerto:u16)->WebDriver{
+
+   let _chrome_process = Command::new(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        // Argumentos para el comando
+        .arg(format!("--remote-debugging-port={}", puerto))
+        .arg(r"--user-data-dir=C:\chrome_temp_profile")
+        // spawn() lo ejecuta de fondo sin bloquear el código de Rust
+        .spawn()
+        .expect("Fallo crítico al intentar abrir Chrome. Revisa permisos.");
 
   
  let mut caps = DesiredCapabilities::chrome();
+
+ match caps.add_experimental_option("debuggerAddress", json!(format!("127.0.0.1:{}", puerto))) {
+     Ok(_) => {},
+     Err(e) => {
+         println!("Error al configurar las capacidades del WebDriver: {}", e);
+         // Aquí podrías decidir si quieres continuar con capacidades por defecto o abortar
+           // Reinicia las capacidades a un estado limpio
+     },
+ };
 
     // 2. Agrega los flags
    //  caps.add_arg("--disable-blink-features=AutomationControlled").unwrap();
@@ -35,8 +54,8 @@ pub async  fn new(&self)->WebDriver{
    //  caps.add_experimental_option("excludeSwitches", json!(["enable-automation"])).unwrap();
    //  caps.add_experimental_option("useAutomationExtension", json!(false)).unwrap();
  
- caps.set_headless()
- .unwrap();
+//  caps.set_headless()
+//  .unwrap();
 
     // 4. Inicializa el driver
     let driver = match WebDriver::new("http://localhost:9515", caps.clone()).await {
@@ -62,15 +81,16 @@ pub async fn factory(&self,perfiles:Vec<Perfil>)->Vec<PerfilJugadas>{
 let mut perfilesju=Vec::new();
 
 
-for perfil in perfiles{
+for (i, perfil) in perfiles.into_iter().enumerate(){
 
- let driver=self.new().await;
+ let driver=self.new(9222 + i as u16).await;
 
 
  let usuario=PerfilJugadas{
 
     usuario:perfil.usuario,
     contrasena:perfil.contrasena,
+
     driver:driver
  };
 

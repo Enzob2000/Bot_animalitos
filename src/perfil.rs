@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thirtyfour::WebDriver;
 
 
@@ -12,6 +12,20 @@ pub contrasena:String,
 
 
 
+}
+
+#[derive(Debug, Deserialize,Serialize)]
+pub struct Cantidad{
+pub monto:String,
+
+
+
+
+}
+#[derive(Debug, Deserialize,Serialize)]
+
+pub struct Loteri{
+    pub loto:String
 }
 
 

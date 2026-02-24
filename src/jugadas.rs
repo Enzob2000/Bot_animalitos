@@ -8,14 +8,14 @@ use thirtyfour::{
     error::WebDriverResult,
     prelude::{ElementQueryable, ElementWaitable},
 };
-use tokio::time::sleep;
+use tokio::{fs::read_to_string, time::sleep};
 
-use crate::animalitos::Animalitos;
+use crate::{animalitos::Animalitos, perfil::{Cantidad, Loteri}};
 #[derive(Clone)]
 pub struct Jugadas {
     animales: Animalitos,
     driver: WebDriver,
-    animalitosjugados: HashMap<u32, Vec<String>>,
+    animalitosjugados: HashMap<String, Vec<String>>,
 }
 
 impl Jugadas {
@@ -32,7 +32,7 @@ impl Jugadas {
         let mut intentos = 0;
 
         while intentos != 3 {
-            match self.driver.find(By::Css(select)).await {
+            match self.driver.find(By::XPath(select)).await {
                 Ok(e) => {
                     match e.click().await {
                         Ok(_) => {
@@ -58,31 +58,36 @@ impl Jugadas {
     }
 
     pub async fn desbloquear(&mut self, nombre: String, contra: String) -> WebDriverResult<()> {
-        self.driver.goto("https://secure.loteriadehoy.com/").await?;
+        self.driver.goto("https://www.apuestasroyal.com/index.php#").await?;
 
         // 3. Busca el elemento con tu selector CSS
 
-        self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-cancel.swal2-styled").await;
+        self.click("/html/body/header/section/div[1]/button").await;
+
+        sleep(Duration::from_secs(5)).await;
 
         // 4. Interactúa: por ejemplo, haz clic
 
         let form = self
             .driver
-            .find(By::Css("#login_form > div:nth-child(1) > input"))
+            .find(By::XPath("/html/body/section/div/div/form/input[2]"))
             .await?;
 
         form.send_keys(nombre.clone()).await?;
 
         let form1 = self
             .driver
-            .find(By::Css("#login_form > div:nth-child(2) > input"))
+            .find(By::XPath("/html/body/section/div/div/form/input[3]"))
             .await?;
 
         form1.send_keys(contra).await?;
 
-        self.click("#kt_login_signin_submit").await;
+        self.click("/html/body/section/div/div/form/button").await;
 
-        self.click("#kt_content > div > div > section > div.container > div > div.col-lg-6.col-md-12 > div > div.contentCircle > div.CirItem.title-box.CirItem1.active > button").await;
+
+        sleep(Duration::from_secs(5)).await;
+
+        self.click("/html/body/div[8]/div/button[2]").await;
 
         Ok(())
     }
@@ -90,17 +95,44 @@ impl Jugadas {
     pub async fn jugada(&mut self, numero: &str) {
         let now = Local::now().hour();
 
-        if let Some(animalito) = self.animalitosjugados.get_mut(&now) {
+        let monto= match read_to_string("cantidad.json").await {
+            Ok(c) => {
+                let cantidad: Cantidad = serde_json::from_str(&c).unwrap();
+                cantidad.monto
+            }
+            Err(_) => "0".to_string(),
+        };
+
+         if monto == "0" {
+            println!("No se ha establecido una cantidad válida para apostar.");
+            return;
+        }
+
+        let loterias= match read_to_string("loteria.json").await {
+            Ok(l) => {
+                let loteri: Loteri= serde_json::from_str(&l).unwrap();
+                loteri.loto
+            }
+            Err(_) => "0".to_string(),
+        };
+
+         if loterias == "0" {
+            println!("No se ha establecido una lotería válida para apostar.");
+            return;
+        }
+        let animalito=format!("{}{}", numero, loterias);
+
+        if let Some(animalito) = self.animalitosjugados.get_mut(&animalito) {
             if animalito.contains(&numero.to_string()) {
                 return;
             } else {
                 animalito.push(numero.to_string());
             }
         } else {
-            self.animalitosjugados.insert(now, vec![numero.to_string()]);
+            self.animalitosjugados.insert(animalito.clone(), vec![numero.to_string()]);
         }
 
-        if let Some(animalito) = self.animales.animalitos.get(numero) {
+        if let Some(animalito) = self.animales.animalitos.get(&animalito) {
             let ani = match self.driver.find(By::XPath(animalito.to_string())).await {
                 Ok(ani) => ani,
                 Err(_) => {
@@ -108,42 +140,82 @@ impl Jugadas {
                     return;
                 }
             };
+            match ani.click().await {
+                Ok(_) => {},
+                Err(_) => {},
+            };
 
-            let mut intent = 0;
 
-            while intent != 3 {
-                match self
-                    .driver
-                    .execute(
-                        "arguments[0].click();",
-                        vec![ani.to_json().unwrap()], // convertimos WebElement a JSON
-                    )
-                    .await
-                {
-                    Ok(_) => {
-                        println!("funciona el animalito");
-                        intent += 1;
-                    }
-                    Err(_) => {
-                        println!("no funciona el animalito");
+             let form = match self
+                         .driver
+                         .find(By::XPath("/html/body/section/div/div/form/input[2]"))
+                         .await {
+                 Ok(e) => {e},
+                 Err(_) => {
+                        println!("no funciona el form");
                         return;
-                    }
-                }
+                 },
+             };
+
+              let Cantidad= match read_to_string("cantidad.json").await {
+            Ok(c) => {
+                let cantidad: Cantidad = serde_json::from_str(&c).unwrap();
+                cantidad.monto
             }
-        }
+            Err(_) => "0".to_string(),
+        };
+
+             match form.send_keys(Cantidad).await {
+                 Ok(_) => {},
+                 Err(e) => {
+                    println!("no funciona el form");
+                    println!("error {}", e);
+                    return;
+                 },
+             };
+
+
+             self.click("/html/body/div[6]/div/button[1]").await;
+
+       
+
+           
+
+
+            
     }
+}
 
     pub async fn ficha(&self) -> Result<(), ()> {
-        self.click("#play_vtab > li.nav-item2.how-work-item.col-lg-2.col-md-3.col-sm-3.col-3.p_19")
+
+        let elemento= match self.driver.find(By::XPath("/html/body/main/section[2]/div[4]/div[1]/div[1]/a/img")).await {
+            Ok(e) => e,
+            Err(_) => {
+                println!("no funciona la ficha");
+                return Err(());
+            }
+        };
+
+        match self.driver.execute("arguments[0].click();", vec![elemento.to_json().unwrap()]).await {
+            Ok(e) => {
+                println!("funciona la ficha");
+            },
+            Err(e) => {
+                println!("no funciona la ficha");
+                println!("error {}", e);
+            },
+        };
+
+        self.click("/html/body/main/div/div[1]/div[1]")
             .await;
 
-        self.click(r"#p_19_tab > div:nth-child(6) > div > div:nth-child(5)")
+        self.click("/html/body/main/div/div[10]/div[1]")
             .await;
 
-        self.click("#p_19_tab > div:nth-child(3) > div > div.col-12.row.kt-checkbox-inline.jc-all.mb-5 > div:nth-child(1) > label")
+        self.click("/html/body/main/div/div[2]/div[1]/div/div[2]/div/div/div/label[1]")
        .await;
         if self.driver.current_url().await.unwrap().to_string()
-            == "https://secure.loteriadehoy.com/animals"
+            == "https://www.apuestasroyal.com/animalitos.php?sorteo=LA%20GRANJITA"
         {
             Ok(())
         } else {
@@ -152,28 +224,16 @@ impl Jugadas {
     }
 
     pub async fn finalizar(&self) -> Result<(), ()> {
-        self.click(r"#p_19_tab > div.col-12.d-flex.jc-all.row > button.btn.btn-proccess.ml-5.mr-3.loto-play-single-bet2").await;
-        // self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select").await;
-        // self.click("#play_single_bet > div > div > div.modal-body > div:nth-child(1) > div.div_wallet.col-12 > div > select > option:nth-child(3)").await;
-        sleep(Duration::from_secs(2)).await;
-        match self.driver.find(By::Css("#btn_loto_purchase")).await {
-            Ok(e) => {
-                match e.click().await {
-                    Ok(_) => {
-                        return Ok(());
-                    }
-                    Err(_) => {
-                        return Err(());
-                    }
-                };
-            }
-            Err(_) => {
-                self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-confirm.swal2-styled").await;
+        
+           self.click("/html/body/main/div/div[1]/div[3]/div/button[1]").await;
 
-                return Err(());
-            }
-        };
+           self.click("/html/body/div[6]/div/button[1]").await;
 
+
+           self.click("/html/body/div[6]/div/button[1]").await;
+
+
+           Ok(())
         // self.click("#btn_loto_purchase").await;
         // self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-confirm.swal2-styled").await;
     }
