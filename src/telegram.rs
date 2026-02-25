@@ -25,7 +25,6 @@ type Ar = Arc<Mutex<Sender<Vec<String>>>>;
 
 const GRUPO: &str = "-4940706854";
 pub struct Telegram;
-
 impl Telegram {
     pub async fn escucha(&self) {
         let (tx, mut rx) = broadcast::channel::<Vec<String>>(16);
@@ -41,9 +40,14 @@ impl Telegram {
 
         let pefiles = Driver.factory(perfiles).await;
 
-        bot.send_message(grupo.clone(), "Cargando Bot...")
-            .await
-            .unwrap();
+        match bot.send_message(grupo.clone(), "Cargando Bot...")
+                    .await {
+            Ok(_) => {},
+            Err(e) => {
+                println!("Error al enviar mensaje de inicio: {}", e);
+                return;
+            },
+        };
 
         for i in pefiles {
             let mut rx = rx.resubscribe();
@@ -67,20 +71,17 @@ impl Telegram {
                             if now == 57 && hora {
                                 driver.refresh().await.unwrap();
 
-                                let mensaje = match jugadasx.ficha().await {
-                                    Ok(_) => {
-                                        format!(
-                                            "{}\n\u{1F7E2} Disponible para jugar",
-                                            usuario.clone()
-                                        )
-                                    }
-                                    Err(_) => {
-                                        format!(
-                                            "{}\n\u{1F534} No Disponible para jugar",
-                                            usuario.clone()
-                                        )
-                                    }
-                                };
+                               let mensaje=match jugadasx.refrescar_hora().await {
+                                   Ok(_) => {
+                                        println!("Hora de jugada refrescada para {}", usuario);
+
+                                        format!("{}\n\u{1F7E2} Hora de jugada refrescada", usuario)
+                                   },
+                                   Err(_) => {
+                                        println!("Error al refrescar hora de jugada para {}", usuario);
+                                        format!("{}\n\u{1F534} Error al refrescar hora de jugada", usuario)
+                                   },
+                               };
                                 botaux2.send_message(grupo2.clone(), mensaje).await.unwrap();
                                 hora = false;
                             } else {
@@ -114,6 +115,21 @@ impl Telegram {
                 botaux.send_message(grupo.clone(), mensaje).await.unwrap();
 
                 while let Ok(mensaje) = rx.recv().await {
+
+                     if mensaje[0].to_lowercase() == "loteria" {
+                        
+                        match jugadas.cambio_loteria(mensaje).await {
+                            Ok(_) => {
+                                println!("Loteria cambiada");
+                            },
+                            Err(_) => {
+                                println!("Error al cambiar loteria");
+                            },
+                        };
+                        continue;
+                    
+                    
+                    }
                     
 
                     for j in mensaje {
@@ -167,7 +183,7 @@ impl Handler {
 
                         bot.send_message(GRUPO.to_string(), error).await.unwrap();
 
-                        return Ok(());
+                        
                     };
 
 
@@ -184,7 +200,9 @@ impl Handler {
                     }
                     Err(e) => {
 
-                        if e.to_lowercase().contains("info"){
+                        println!("mensaje recibido: {}", mensage);
+
+                        if mensage.to_lowercase().contains("info"){
                          
                          let cantidad= match fs::read_to_string("cantidad.json") {
                             Ok(c) => {
@@ -198,17 +216,33 @@ impl Handler {
                                     let loteria: perfil::Loteri = serde_json::from_str(&c).unwrap();
                                     loteria.loto
                                 }
-                                Err(_) => "No establecida".to_string(),
+                                Err(_) => "lo".to_string(),
                             };
 
-                            let info = format!("Cantidad actual: {}\nLoteria actual: {}", cantidad, loteria);
-                            bot.send_message(msg.chat.id, info).await?;
+                            
+
+                            let info = format!("Cantidad actual: {}\nLoteria actual: {}", cantidad, loteria).to_string();
+                            match bot.send_message(msg.chat.id, info.clone()).await {
+                                Ok(e) => {
+                                    println!("Información enviada a Telegram: {}", info);
+                                },
+                                Err(e) => {
+                                    println!("Error al enviar información a Telegram: {}", e);
+                                },
+                            };
+                            return Ok(());
 
                         };
+                        
 
-                        if e.to_lowercase().contains("set"){
+                        if mensage.to_lowercase().contains("set"){
+
+
+
                          
-                         let cantidad=e.split(" ").collect::<Vec<&str>>()[1].to_string();
+                         let cantidad=mensage.split(" ").collect::<Vec<&str>>()[1].to_string();
+
+                         println!("Cantidad a establecer: {}", cantidad);
 
                          let cantidad=Cantidad{
                             monto:cantidad.to_string().trim().to_string()
@@ -220,9 +254,9 @@ impl Handler {
                         }
 
 
-                        if e.to_lowercase().contains("loteria"){
+                        if mensage.to_lowercase().contains("loteria"){
                          
-                         let loteria=e.split(" ").collect::<Vec<&str>>()[1].to_string();
+                         let loteria=mensage.split(" ").collect::<Vec<&str>>()[1].to_string();
 
                          let loteria=perfil::Loteri{
                             loto:loteria.to_string().trim().to_string()
@@ -230,6 +264,16 @@ impl Handler {
                             fs::write("loteria.json", serde_json::to_string(&loteria).unwrap()).unwrap();
 
                             bot.send_message(msg.chat.id, format!("Loteria establecida a {}", loteria.loto)).await?;
+
+                            let cola = Arc::clone(&tx);
+                            let tx = cola.lock().await;
+                            tx.send(
+                                mensage
+                                    .split(" ")
+                                    .into_iter().map(|e| e.to_string())
+                                    .collect::<Vec<String>>()
+                                    
+                            )?;
 
                             return Ok(());
                         }

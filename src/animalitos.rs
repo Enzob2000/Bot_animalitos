@@ -26,8 +26,8 @@ for i in 3..=38{
 
 
 
-animalitos.insert("00gr".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[1]".to_string());
-animalitos.insert("0gr".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[2]".to_string());
+animalitos.insert("00gr".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[2]".to_string());
+animalitos.insert("0gr".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[1]".to_string());
 
 
 for i in 3..=38{
@@ -37,8 +37,8 @@ for i in 3..=38{
 }
 
 
-animalitos.insert("00gu".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[1]".to_string());
-animalitos.insert("0gu".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[2]".to_string());
+animalitos.insert("00gu".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[2]".to_string());
+animalitos.insert("0gu".to_string(),"/html/body/main/div/div[2]/div[2]/div/div[2]/div/div/button[1]".to_string());
 
 
 for i in 3..=77{

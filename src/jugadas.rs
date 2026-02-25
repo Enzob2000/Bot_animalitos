@@ -34,7 +34,7 @@ impl Jugadas {
         while intentos != 3 {
             match self.driver.find(By::XPath(select)).await {
                 Ok(e) => {
-                    match e.click().await {
+                    match self.driver.execute("arguments[0].click();", vec![e.to_json().unwrap()]).await {
                         Ok(_) => {
                             intentos = 3;
                         }
@@ -85,7 +85,7 @@ impl Jugadas {
         self.click("/html/body/section/div/div/form/button").await;
 
 
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(3)).await;
 
         self.click("/html/body/div[8]/div/button[2]").await;
 
@@ -133,6 +133,7 @@ impl Jugadas {
         }
 
         if let Some(animalito) = self.animales.animalitos.get(&animalito) {
+
             let ani = match self.driver.find(By::XPath(animalito.to_string())).await {
                 Ok(ani) => ani,
                 Err(_) => {
@@ -148,7 +149,7 @@ impl Jugadas {
 
              let form = match self
                          .driver
-                         .find(By::XPath("/html/body/section/div/div/form/input[2]"))
+                         .find(By::XPath("/html/body/div[6]/div/div[6]/b/input"))
                          .await {
                  Ok(e) => {e},
                  Err(_) => {
@@ -164,7 +165,18 @@ impl Jugadas {
             }
             Err(_) => "0".to_string(),
         };
+           sleep(Duration::from_millis(200)).await;
 
+           match form.clear().await {
+               Ok(_) => {},
+               Err(e) => {
+                    println!("no funciona el form");
+                    println!("error {}", e);
+                    return;
+               },
+           }
+           sleep(Duration::from_millis(200)).await;
+             
              match form.send_keys(Cantidad).await {
                  Ok(_) => {},
                  Err(e) => {
@@ -174,7 +186,8 @@ impl Jugadas {
                  },
              };
 
-
+           sleep(Duration::from_millis(200)).await;
+             
              self.click("/html/body/div[6]/div/button[1]").await;
 
        
@@ -184,6 +197,8 @@ impl Jugadas {
 
             
     }
+
+    println!("el animalito {} ya fue jugado", numero);
 }
 
     pub async fn ficha(&self) -> Result<(), ()> {
@@ -205,17 +220,48 @@ impl Jugadas {
                 println!("error {}", e);
             },
         };
-
-        self.click("/html/body/main/div/div[1]/div[1]")
+  
+        self.click("/html/body/main/div/div[1]/div[1]/a/img")
             .await;
+        
+        let Loteri= match read_to_string("loteria.json").await {
+            Ok(c) => {
+                let cantidad: Loteri = serde_json::from_str(&c).unwrap();
+                cantidad.loto
+            }
+            Err(_) => "0".to_string(),
+        };
 
-        self.click("/html/body/main/div/div[10]/div[1]")
-            .await;
+       match Loteri.as_str() {
+            "lo" => {
+                self.click("/html/body/main/div/div[10]/div[1]/a[1]/img").await;
+            },
+            "gu" => {
+                self.click("/html/body/main/div/div[7]/div[1]/a[1]/img").await;
+            },
+            "gr" => {
+                self.click("/html/body/main/div/div[6]/div[1]/a[1]/img").await;
+            }
+            _ => {
+                println!("Lotería no reconocida");
+                return Err(());
+            }
+            
+        }
+
+       
 
         self.click("/html/body/main/div/div[2]/div[1]/div/div[2]/div/div/div/label[1]")
        .await;
-        if self.driver.current_url().await.unwrap().to_string()
-            == "https://www.apuestasroyal.com/animalitos.php?sorteo=LA%20GRANJITA"
+
+    let pagina=  match self.driver.current_url().await {
+        Ok(e) => e.to_string(),
+        Err(_) => return Err(()),
+    };
+    println!("pagina actual: {}", pagina);
+
+        if pagina.to_string()
+            == "https://www.apuestasroyal.com/animalitos.php?sorteo=LOTTO%20ACTIVO"
         {
             Ok(())
         } else {
@@ -224,14 +270,61 @@ impl Jugadas {
     }
 
     pub async fn finalizar(&self) -> Result<(), ()> {
+           sleep(Duration::from_millis(200)).await;
         
            self.click("/html/body/main/div/div[1]/div[3]/div/button[1]").await;
 
+           sleep(Duration::from_millis(200)).await;
+
            self.click("/html/body/div[6]/div/button[1]").await;
 
+           sleep(Duration::from_millis(1000)).await;
 
            self.click("/html/body/div[6]/div/button[1]").await;
 
+          
+
+
+           Ok(())
+        // self.click("#btn_loto_purchase").await;
+        // self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-confirm.swal2-styled").await;
+    }
+
+     pub async fn cambio_loteria(&self,mensaje:Vec<String>) -> Result<(), ()> {
+
+        match mensaje[1].as_str() {
+            "lo" => {
+                self.click("/html/body/main/div/div[3]/a[5]").await;
+            },
+            "gu" => {
+                self.click("/html/body/main/div/div[3]/a[2]").await;
+            },
+            "gr" => {
+                self.click("/html/body/main/div/div[3]/a[7]").await;
+            }
+            _ => {
+                println!("Lotería no reconocida: {}", mensaje[1]);
+                return Err(());
+            }
+            
+        }
+        
+           
+
+        self.click("/html/body/main/div/div[2]/div[1]/div/div[2]/div/div/div/label[1]").await;
+     
+           Ok(())
+        // self.click("#btn_loto_purchase").await;
+        // self.click("#kt_body > div.swal2-container.swal2-center.swal2-backdrop-show > div > div.swal2-actions > button.swal2-confirm.swal2-styled").await;
+
+}
+
+pub async fn refrescar_hora(&self) -> Result<(), ()> {
+        
+
+          
+        self.click("/html/body/main/div/div[2]/div[1]/div/div[2]/div/div/div/label[1]").await;
+     
 
            Ok(())
         // self.click("#btn_loto_purchase").await;

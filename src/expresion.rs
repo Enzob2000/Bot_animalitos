@@ -9,7 +9,7 @@ impl  Expresion {
 
     pub fn evaluar(expre:&str)->Result<Vec<&str>,&str>{
     
-     let re = Regex::new(r"^(?:0?\d|[12]\d|3[0-6])(?:,(?:0?\d|[12]\d|3[0-6]))*$").unwrap();
+   let re = Regex::new(r"^(?:0?\d|[1-6]\d|7[0-5])(?:,(?:0?\d|[1-6]\d|7[0-5]))*$").unwrap();
 
       if let Some(_) = re.captures(expre) {
 
