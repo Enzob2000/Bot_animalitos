@@ -27,7 +27,7 @@ const GRUPO: &str = "-4940706854";
 pub struct Telegram;
 impl Telegram {
     pub async fn escucha(&self) {
-        let (tx, mut rx) = broadcast::channel::<Vec<String>>(16);
+        let (tx, mut rx) = broadcast::channel::<Vec<String>>(50);
 
         let tx: Ar = Arc::new(Mutex::new(tx));
 
@@ -50,7 +50,7 @@ impl Telegram {
         };
 
         for i in pefiles {
-            let mut rx = rx.resubscribe();
+            let mut rx = tx.lock().await.subscribe();
             let mut jugadas = jugadas::Jugadas::new(i.driver.clone()).await;
             let botaux = bot.clone();
             let grupo = grupo.clone();

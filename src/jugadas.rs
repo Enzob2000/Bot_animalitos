@@ -59,7 +59,8 @@ impl Jugadas {
 
     pub async fn desbloquear(&mut self, nombre: String, contra: String) -> WebDriverResult<()> {
         self.driver.goto("https://www.apuestasroyal.com/index.php#").await?;
-
+           sleep(Duration::from_millis(200)).await;
+       
         // 3. Busca el elemento con tu selector CSS
 
         self.click("/html/body/header/section/div[1]/button").await;
@@ -220,6 +221,8 @@ impl Jugadas {
                 println!("error {}", e);
             },
         };
+           sleep(Duration::from_millis(200)).await;
+
   
         self.click("/html/body/main/div/div[1]/div[1]/a/img")
             .await;
@@ -231,7 +234,8 @@ impl Jugadas {
             }
             Err(_) => "0".to_string(),
         };
-
+           sleep(Duration::from_millis(200)).await;
+       
        match Loteri.as_str() {
             "lo" => {
                 self.click("/html/body/main/div/div[10]/div[1]/a[1]/img").await;
@@ -243,14 +247,13 @@ impl Jugadas {
                 self.click("/html/body/main/div/div[6]/div[1]/a[1]/img").await;
             }
             _ => {
-                println!("Lotería no reconocida");
-                return Err(());
+                self.click("/html/body/main/div/div[10]/div[1]/a[1]/img").await;
+               
             }
             
         }
-
+           sleep(Duration::from_millis(200)).await;
        
-
         self.click("/html/body/main/div/div[2]/div[1]/div/div[2]/div/div/div/label[1]")
        .await;
 
